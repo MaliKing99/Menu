@@ -28,13 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = 'hidden'; // Prevent scrolling initially
     startOrderingBtn.addEventListener('click', () => {
         const name = customerNameInput.value.trim();
-        if (name) {
+        const isValidName = /^[a-zA-Z\s]+$/.test(name);
+        
+        if (name && isValidName) {
             userName = name;
             welcomeOverlay.classList.add('hidden');
             document.body.style.overflow = ''; // Restore scrolling
         } else {
-            customerNameInput.style.borderColor = 'var(--accent)';
-            setTimeout(() => customerNameInput.style.borderColor = '', 1000);
+            const originalPlaceholder = customerNameInput.placeholder;
+            customerNameInput.value = '';
+            customerNameInput.placeholder = 'Letters only please!';
+            customerNameInput.style.borderColor = 'red';
+            setTimeout(() => {
+                customerNameInput.style.borderColor = '';
+                customerNameInput.placeholder = originalPlaceholder;
+            }, 2000);
         }
     });
 
