@@ -199,12 +199,27 @@ document.addEventListener('DOMContentLoaded', () => {
         cartOverlay.classList.remove('show');
     }
 
-    // Checkout
+    // Confirm Modal
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmOrderBtn = document.getElementById('confirmOrderBtn');
+    const cancelOrderBtn = document.getElementById('cancelOrderBtn');
+
     checkoutBtn.addEventListener('click', () => {
         if (cart.length === 0) return;
+        // Show confirm modal first
+        confirmModal.classList.add('show');
+    });
 
-        checkoutBtn.textContent = 'Processing...';
-        checkoutBtn.disabled = true;
+    cancelOrderBtn.addEventListener('click', () => {
+        confirmModal.classList.remove('show');
+    });
+
+    confirmOrderBtn.addEventListener('click', () => {
+        confirmModal.classList.remove('show');
+        closeCart();
+
+        confirmOrderBtn.textContent = 'Placing Order...';
+        confirmOrderBtn.disabled = true;
 
         fetch('/api/bill', {
             method: 'POST',
@@ -213,16 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(res => res.json())
         .then(data => {
-            closeCart();
             showBill(data);
             cart = []; // clear cart
             updateCartUI();
-            checkoutBtn.textContent = 'Proceed to Checkout';
+            confirmOrderBtn.textContent = 'Yes, Place Order';
+            confirmOrderBtn.disabled = false;
         })
         .catch(err => {
             console.error('Checkout error:', err);
-            checkoutBtn.textContent = 'Proceed to Checkout';
-            checkoutBtn.disabled = false;
+            confirmOrderBtn.textContent = 'Yes, Place Order';
+            confirmOrderBtn.disabled = false;
             alert('Error generating bill.');
         });
     });
