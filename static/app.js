@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const subtotalAmount = document.getElementById('subtotalAmount');
     const cartCount = document.getElementById('cartCount');
     const checkoutBtn = document.getElementById('checkoutBtn');
-    
+
     const billModal = document.getElementById('billModal');
     const closeBillBtn = document.getElementById('closeBillBtn');
     const billBody = document.getElementById('billBody');
@@ -29,11 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
     startOrderingBtn.addEventListener('click', () => {
         const name = customerNameInput.value.trim();
         const isValidName = /^[a-zA-Z\s]+$/.test(name);
-        
+
         if (name && isValidName) {
             userName = name;
             welcomeOverlay.classList.add('hidden');
-            document.body.style.overflow = ''; // Restore scrolling
+
+            // wait for fade-out animation to complete, then remove it
+            setTimeout(() => {
+                welcomeOverlay.style.display = 'none';
+                setTimeout(() => {
+                    welcomeOverlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 800); // Restore scrolling
+            }, 800); // match CSS transition time
         } else {
             const originalPlaceholder = customerNameInput.placeholder;
             customerNameInput.value = '';
@@ -78,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             categoryFilter.appendChild(btn);
         });
-        
+
         // Setup 'All' button
         document.querySelector('.cat-btn[data-category="All"]').addEventListener('click', (e) => {
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -119,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cart Logic
-    window.addToCart = function(id, name, price) {
+    window.addToCart = function (id, name, price) {
         const existing = cart.find(item => item.id === id);
         if (existing) {
             existing.quantity += 1;
@@ -127,13 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
             cart.push({ id, name, price, quantity: 1 });
         }
         updateCartUI();
-        
+
         // Small animation on cart button
         cartBtn.style.transform = 'scale(1.2)';
         setTimeout(() => cartBtn.style.transform = '', 200);
     };
 
-    window.updateQty = function(id, delta) {
+    window.updateQty = function (id, delta) {
         const item = cart.find(i => i.id === id);
         if (item) {
             item.quantity += delta;
@@ -144,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.removeFromCart = function(id) {
+    window.removeFromCart = function (id) {
         cart = cart.filter(i => i.id !== id);
         updateCartUI();
     };
@@ -226,20 +234,20 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ cart: cart })
         })
-        .then(res => res.json())
-        .then(data => {
-            showBill(data);
-            cart = []; // clear cart
-            updateCartUI();
-            confirmOrderBtn.textContent = 'Yes, Place Order';
-            confirmOrderBtn.disabled = false;
-        })
-        .catch(err => {
-            console.error('Checkout error:', err);
-            confirmOrderBtn.textContent = 'Yes, Place Order';
-            confirmOrderBtn.disabled = false;
-            alert('Error generating bill.');
-        });
+            .then(res => res.json())
+            .then(data => {
+                showBill(data);
+                cart = []; // clear cart
+                updateCartUI();
+                confirmOrderBtn.textContent = 'Yes, Place Order';
+                confirmOrderBtn.disabled = false;
+            })
+            .catch(err => {
+                console.error('Checkout error:', err);
+                confirmOrderBtn.textContent = 'Yes, Place Order';
+                confirmOrderBtn.disabled = false;
+                alert('Error generating bill.');
+            });
     });
 
     function showBill(billData) {

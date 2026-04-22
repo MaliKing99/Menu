@@ -585,12 +585,12 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('/static/welcome_bg.jpg') center/cover no-repeat;
+    background: url('/static/Dream_big.jpg') center/cover no-repeat;
     z-index: 500;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.8s ease;
 }
 
 .welcome-overlay::before {
@@ -608,6 +608,11 @@ body {
 .welcome-overlay.hidden {
     opacity: 0;
     pointer-events: none;
+}
+
+.welcome-overlay.hidden .welcome-content {
+    transform: translateY(-60px) scale(0.95);
+    opacity: 0;
 }
 
 .welcome-content {
