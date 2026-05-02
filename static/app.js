@@ -67,12 +67,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Geolocation + Delivery Range Check ────────────────────────────────
     function checkUserLocation() {
         if (!navigator.geolocation) {
-            proceedToMenu(0);
+            showLocationError("Location services are not supported by your browser. We need your location to deliver.");
             return;
         }
         navigator.geolocation.getCurrentPosition(
             (pos) => callDeliveryAPI(pos.coords.latitude, pos.coords.longitude),
-            (err) => { console.warn('Geolocation:', err.message); proceedToMenu(0); },
+            (err) => { 
+                console.warn('Geolocation:', err.message); 
+                showLocationError("Please enable location permissions and refresh. We need your location to verify delivery range."); 
+            },
             { timeout: 8000, maximumAge: 60000 }
         );
     }
@@ -96,7 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 showOutOfRange(data.message || "Out of delivery range. We're growing soon!");
             }
         })
-        .catch(() => proceedToMenu(0));
+        .catch(() => {
+            // If the server check fails, we can't verify range.
+            showLocationError("Failed to connect to the server to verify your location. Please try again later.");
+        });
     }
 
     function proceedToMenu(distKm) {
@@ -116,7 +122,29 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { welcomeOverlay.style.display = 'none'; }, 850);
         document.body.style.overflow = '';
         if (oorMessage) oorMessage.textContent = msg;
+        
+        // Reset title to out of range just in case
+        const title = outOfRangeOverlay.querySelector('h2');
+        if (title) title.textContent = "Out of Delivery Range";
+        
         outOfRangeOverlay.style.display = 'flex';
+    }
+
+    function showLocationError(msg) {
+        welcomeOverlay.classList.add('hidden');
+        setTimeout(() => { welcomeOverlay.style.display = 'none'; }, 850);
+        document.body.style.overflow = '';
+        if (oorMessage) oorMessage.textContent = msg;
+        
+        // Change title to Location Required
+        const title = outOfRangeOverlay.querySelector('h2');
+        if (title) title.textContent = "Location Required";
+        
+        outOfRangeOverlay.style.display = 'flex';
+        
+        // Re-enable button in case they go back
+        startOrderingBtn.disabled = false;
+        startOrderingBtn.innerHTML = 'Begin Ordering &nbsp;<i class="fa-solid fa-arrow-right"></i>';
     }
 
     // ── Fetch Menu ────────────────────────────────────────────────────────
