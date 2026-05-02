@@ -12,13 +12,13 @@
 
 # ── Restaurant / Server Location ──────────────────────────────────────────
 # Current: Bhaskar Mali Chawk, Bhiwandi, Maharashtra, India
-SERVER_LAT = 19.3008   # ← change to college latitude  e.g. 19.0760
-SERVER_LNG = 73.0593   # ← change to college longitude e.g. 72.8777
+SERVER_LAT = 19.081370206748694   # ← change to college latitude  e.g. 19.0760
+SERVER_LNG = 72.88860538053606   # ← change to college longitude e.g. 72.8777
 
 # ── Delivery Limits ───────────────────────────────────────────────────────
-MAX_DELIVERY_KM = 15        # Orders beyond this distance are rejected
+MAX_DELIVERY_KM = 100        # Orders beyond this distance are rejected
 
 # ── Time Components (minutes) ─────────────────────────────────────────────
-FIXED_PREP_TIME  = 15       # Kitchen preparation time
-TRAVEL_PER_KM    = 4        # 4 min/km  →  ~15 km/h average city speed
+FIXED_PREP_TIME  = 20       # Kitchen preparation time
+TRAVEL_PER_KM    = 3        # 3 min/km  →  ~20 km/h average city speed
 HANDOFF_BUFFER   = 5        # Driver finding house / parking

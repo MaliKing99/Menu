@@ -525,3 +525,20 @@ input, textarea { user-select: text; -webkit-user-select: text; }
     color:var(--text-muted) !important;
     margin-top:4px;opacity:.8;
 }
+
+/* ── Navigate Button ── */
+.navigate-btn {
+    display: block;
+    margin: 15px auto;
+    padding: 10px 16px;
+    background: #c9a84c;
+    color: #0a0804;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s ease;
+}
+.navigate-btn:hover {
+    background: #e8c96a;
+}

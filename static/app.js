@@ -39,6 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let userDistanceKm = 0;
     let deliveryMapInstance = null;  // Leaflet map — reused across receipts
 
+
+    // ✅ GLOBAL CURRENCY FORMAT FUNCTION
+function formatPrice(amount) {
+    return '₹' + amount.toLocaleString('en-IN');
+}
+
+
     // ── Welcome ───────────────────────────────────────────────────────────
     document.body.style.overflow = 'hidden';
 
@@ -134,38 +141,57 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMenu();
     }
 
-    // ── Categories ────────────────────────────────────────────────────────
-    function renderCategories() {
-        const cats = Object.keys(menuData);
-        cats.forEach(cat => {
-            if (!menuData[cat]) return;
-            const btn = document.createElement('button');
-            btn.className = 'cat-btn';
-            btn.dataset.category = cat;
-            btn.textContent = cat;
-            btn.addEventListener('click', () => {
-                setCategory(cat);
-                btn.closest('.categories').querySelectorAll('.cat-btn')
-                    .forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-            categoryFilter.appendChild(btn);
-        });
-        document.querySelector('.cat-btn[data-category="All"]').addEventListener('click', e => {
-            setCategory('All');
-            categoryFilter.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-        });
-    }
+    // ── Categories (FIXED - NO DUPLICATION) ───────────────────────────────────
+function renderCategories() {
 
-    function setCategory(cat) {
-        activeCategory = cat;
-        searchInput.value = '';
-        searchQuery = '';
-        searchNotice.style.display = 'none';
-        renderMenu();
-    }
+function setCategory(cat) {
+    activeCategory = cat;
 
+    // Reset search when category is clicked
+    searchInput.value = '';
+    searchQuery = '';
+    searchNotice.style.display = 'none';
+
+    renderMenu();
+}
+
+    // ✅ Remove all buttons except "All"
+    const allBtn = categoryFilter.querySelector('[data-category="All"]');
+    categoryFilter.innerHTML = '';
+    categoryFilter.appendChild(allBtn);
+
+    const cats = Object.keys(menuData);
+
+    cats.forEach(cat => {
+        if (!menuData[cat]) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn';
+        btn.dataset.category = cat;
+        btn.textContent = cat;
+
+        btn.addEventListener('click', () => {
+            setCategory(cat);
+
+            categoryFilter.querySelectorAll('.cat-btn')
+                .forEach(b => b.classList.remove('active'));
+
+            btn.classList.add('active');
+        });
+
+        categoryFilter.appendChild(btn);
+    });
+
+    // ✅ Ensure "All" button works properly
+    allBtn.addEventListener('click', (e) => {
+        setCategory('All');
+
+        categoryFilter.querySelectorAll('.cat-btn')
+            .forEach(b => b.classList.remove('active'));
+
+        e.target.classList.add('active');
+    });
+}
     // ── Search ────────────────────────────────────────────────────────────
     searchInput.addEventListener('input', () => {
         searchQuery = searchInput.value.trim().toLowerCase();
@@ -226,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="item-body">
                     <div class="item-header">
                         <span class="item-name">${item.name}</span>
-                        <span class="item-price">$${item.price.toFixed(2)}</span>
+                        <span class="item-price">${formatPrice(item.price)}</span>
                     </div>
                     <div class="item-meta">
                         <span class="item-delivery"><i class="fa-solid fa-clock"></i> ~${item.delivery_time} mins prep</span>
@@ -281,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.innerHTML = `
                     <div class="cart-item-info">
                         <h4>${item.name}</h4>
-                        <div class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+                        <div class="cart-item-price">${formatPrice(item.price * item.quantity)}</div>
                     </div>
                     <div class="cart-item-controls">
                         <button class="qty-btn" onclick="updateQty('${item.id}',-1)"><i class="fa-solid fa-minus"></i></button>
@@ -293,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartItemsEl.appendChild(el);
             });
         }
-        subtotalAmount.textContent = '$' + subtotal.toFixed(2);
+        subtotalAmount.textContent = formatPrice(subtotal);
         cartCount.textContent = count;
     }
 
@@ -322,23 +348,41 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmOrderBtn.textContent = 'Placing Order…';
         confirmOrderBtn.disabled = true;
 
-        fetch('/api/bill', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cart, distance_km: userDistanceKm })
+    // 🕒 Check if user is late BEFORE sending request
+    const pickupTime = localStorage.getItem("pickupTime");
+    const now = Date.now();
+
+    let isUserLate = false;
+    if (pickupTime && now > pickupTime) {
+        isUserLate = true;
+    }
+
+    fetch('/api/bill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cart: cart,
+            distance_km: userDistanceKm,
+            is_late: isUserLate   // 👈 HERE
         })
-        .then(r => r.json())
-        .then(data => {
-            showBill(data);
-            cart = [];
-            updateCartUI();
-            confirmOrderBtn.textContent = 'Yes, Place Order';
-            confirmOrderBtn.disabled = false;
+    })
+    .then(r => r.json())
+    .then(data => {
+        // 🕒 Store pickup time using ETA
+        const eta = data.delivery_time;  // already coming from backend
+        const pickupTime = Date.now() + (eta * 60 * 1000);
+        localStorage.setItem("pickupTime", pickupTime);
+        showBill(data);
+        cart = [];
+        updateCartUI();
+        confirmOrderBtn.textContent = 'Yes, Place Order';
+        confirmOrderBtn.disabled = false;
         })
-        .catch(() => {
+    .catch(() => {
             alert('Error generating bill.');
             confirmOrderBtn.textContent = 'Yes, Place Order';
             confirmOrderBtn.disabled = false;
+            billBody.innerHTML = `...`;
         });
     });
 
@@ -349,15 +393,18 @@ document.addEventListener('DOMContentLoaded', () => {
             itemsHtml += `
                 <div class="receipt-item">
                     <span>${item.quantity}× ${item.name}</span>
-                    <span>$${item.total.toFixed(2)}</span>
+                    <span>${formatPrice(item.total)}</span>
                 </div>`;
         });
+
+        
 
         const eta      = data.delivery_time || 20;
         const dist     = data.distance_km   || 0;
         const avgPrep  = data.avg_prep_min  || 15;
         const distLabel = dist > 0 ? ` &nbsp;·&nbsp; ${dist.toFixed(1)} km` : '';
-
+        const mapsLink = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${data.server_lat},${data.server_lng}&travelmode=driving`;
+        
         billBody.innerHTML = `
             <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
             <h3 style="text-align:center;margin-bottom:6px;color:var(--text-main);
@@ -367,18 +414,24 @@ document.addEventListener('DOMContentLoaded', () => {
             </p>
             ${itemsHtml}
             <div class="receipt-divider"></div>
-            <div class="receipt-item"><span>Subtotal</span><span>$${data.subtotal.toFixed(2)}</span></div>
-            <div class="receipt-item"><span>Tax (8%)</span><span>$${data.tax.toFixed(2)}</span></div>
+            <div class="receipt-item"><span>Subtotal</span><span>${formatPrice(data.subtotal)}</span></div>
+            <div class="receipt-item"><span>Tax (8%)</span><span>${formatPrice(data.tax)}</span></div>
+            ${data.penalty > 0 ? `
+                <div class="receipt-item" style="color:#ef4444;">
+                    <span>Late Pickup Fine</span>
+                    <span>₹${data.penalty}</span>
+                </div>` : ''}
             <div class="receipt-divider"></div>
-            <div class="receipt-total"><span>Total</span><span>$${data.total.toFixed(2)}</span></div>
+            <div class="receipt-total"><span>Total</span><span>${formatPrice(data.total)}</span></div>
 
             <div class="delivery-banner">
                 <i class="fa-solid fa-motorcycle"></i>
                 <div>
-                    <p>Estimated arrival: <strong>~${eta} minutes</strong>${distLabel}</p>
+                    <p><strong>Pickup after:</strong> ~${data.pickup_time} minutes</p>
+                    <p>Follow the route below to reach the restaurant.</p>
                     <p style="font-size:.78rem;margin-top:4px;opacity:.7;">
                         Avg kitchen prep ${avgPrep} min
-                        + travel ${dist > 0 ? (dist * 4).toFixed(0) : '0'} min
+                        + travel ${dist > 0 ? (dist * 3).toFixed(0) : '0'} min
                         + 5 min handoff
                     </p>
                 </div>
@@ -387,41 +440,58 @@ document.addEventListener('DOMContentLoaded', () => {
             ${(data.server_lat && userLat) ? `
             <div class="map-section">
                 <div class="map-label">
-                    <i class="fa-solid fa-map-location-dot"></i> Delivery Route
+                    <i class="fa-solid fa-map-location-dot"></i> "Route to Restaurant"
                 </div>
                 <div id="deliveryMap"></div>
                 <div class="map-legend">
                     <span><span class="legend-dot restaurant"></span> Restaurant</span>
                     <span><span class="legend-dot user"></span> Your Location</span>
                 </div>
-            </div>` : ''}
+            </div>
+
+            <a href="${mapsLink}" target="_blank" class="navigate-btn">
+                <i class="fa-solid fa-location-arrow"></i> Navigate via Google Maps
+            </a>
+            ` : ''}
         `;
 
         billModal.classList.add('show');
 
         // Init Leaflet map after the modal is visible and DOM is painted
         if (data.server_lat && userLat) {
-            setTimeout(() => initDeliveryMap(data.server_lat, data.server_lng), 200);
+            setTimeout(() => {
+                initMap(data.server_lat, data.server_lng, userLat, userLng);
+            }, 100);
         }
-    }
 
-    function initDeliveryMap(sLat, sLng) {
-        const mapEl = document.getElementById('deliveryMap');
-        if (!mapEl) return;
-
+    
         // Destroy existing map instance to avoid "Map container is already initialized"
         if (deliveryMapInstance) {
             deliveryMapInstance.remove();
             deliveryMapInstance = null;
         }
 
-        const map = L.map('deliveryMap', { zoomControl: true, scrollWheelZoom: false });
-        deliveryMapInstance = map;
+    function initMap(resLat, resLng, userLat, userLng) {
+        deliveryMapInstance = L.map('deliveryMap').setView([userLat, userLng], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-            maxZoom: 18
-        }).addTo(map);
+        // Destroy existing map instance to avoid "Map container is already initialized"
+        if (deliveryMapInstance) {
+            deliveryMapInstance.remove();
+            deliveryMapInstance = null;
+        }
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    L.marker([resLat, resLng]).addTo(map).bindPopup("Restaurant");
+    L.marker([userLat, userLng]).addTo(map).bindPopup("You");
+
+    L.polyline([
+        [resLat, resLng],
+        [userLat, userLng]
+    ]).addTo(map);
+}
+        
 
         // ── Custom gold icon for restaurant ──────────────────────────────
         const restaurantIcon = L.divIcon({
@@ -441,16 +511,16 @@ document.addEventListener('DOMContentLoaded', () => {
             popupAnchor: [0, -36]
         });
 
-        const restaurantMarker = L.marker([sLat, sLng], { icon: restaurantIcon })
+        const restaurantMarker = L.marker([resLat, resLng], { icon: restaurantIcon })
             .addTo(map)
-            .bindPopup('<strong>🍽 Gourmet Bites</strong><br>Bhaskar Mali Chawk, Bhiwandi');
+            .bindPopup('<strong>🍽 Gourmet Bites</strong><br>Pickup Location');
 
         const userMarker = L.marker([userLat, userLng], { icon: userIcon })
             .addTo(map)
             .bindPopup(`<strong>📍 Your Location</strong>`);
 
         // Dashed delivery route line
-        L.polyline([[sLat, sLng], [userLat, userLng]], {
+        L.polyline([[resLat, resLng], [userLat, userLng]], {
             color: '#c9a84c',
             weight: 3,
             opacity: 0.85,
@@ -458,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).addTo(map);
 
         // Fit map to show both markers with padding
-        const bounds = L.latLngBounds([[sLat, sLng], [userLat, userLng]]);
+        const bounds = L.latLngBounds([[resLat, resLng], [userLat, userLng]]);
         map.fitBounds(bounds, { padding: [30, 30] });
 
         // Force re-render in case modal caused layout shift
