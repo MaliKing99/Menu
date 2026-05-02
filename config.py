@@ -12,8 +12,8 @@
 
 # ── Restaurant / Server Location ──────────────────────────────────────────
 # Current: Bhaskar Mali Chawk, Bhiwandi, Maharashtra, India
-SERVER_LAT = 19.3008   # ← change to college latitude  e.g. 19.0760
-SERVER_LNG = 73.0593   # ← change to college longitude e.g. 72.8777
+SERVER_LAT = 19.29669117120481   # ← change to college latitude  e.g. 19.0760
+SERVER_LNG = 73.05551828068832  # ← change to college longitude e.g. 72.8777
 
 # ── Delivery Limits ───────────────────────────────────────────────────────
 MAX_DELIVERY_KM = 15        # Orders beyond this distance are rejected
