@@ -18,7 +18,7 @@ MENU_SEED = [
     ("s1","Starters","Spring Rolls",5.99,"Crispy vegetable spring rolls","",15,
      "/static/images/spring_roll.jpg"),
     ("s2","Starters","Garlic Bread",4.99,"Toasted bread with garlic butter and herbs","Bestseller",12,
-     "/static/images/garlic_bread.jpg"),
+     "/static/images/Garlic_bread.jpg"),
     ("s3","Starters","French Fries",3.99,"Classic salted french fries","",10,
      "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&h=300&fit=crop&auto=format"),
     ("s4","Starters","Onion Rings",4.49,"Golden fried onion rings","",12,
@@ -32,7 +32,7 @@ MENU_SEED = [
     ("s8","Starters","Stuffed Mushrooms",7.49,"Mushrooms stuffed with cheese and herbs","Chef Special",15,
      "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&h=300&fit=crop&auto=format"),
     ("s9","Starters","Nachos",6.49,"Tortilla chips with melted cheese and jalapenos","New",10,
-     "/static/images/nachos.jpg"),
+     "/static/images/Nachos.jpg"),
 
 
     # Beverages
@@ -63,17 +63,17 @@ MENU_SEED = [
     ("br2","Breads","Garlic Naan",2.49,"Naan topped with garlic and coriander","Bestseller",10,
      "/static/images/garlic_naan.jpg"),
     ("br3","Breads","Butter Naan",2.29,"Naan brushed with butter","",10,
-     "/static/images/butter_naan.jpg"),
+     "/static/images/Butter_naan.jpg"),
     ("br4","Breads","Tandoori Roti",1.49,"Whole wheat bread cooked in clay oven","Bestseller",10,
-     "/static/images/tandoori_roti.jpg"),
+     "/static/images/Tandoori_roti.jpg"),
     ("br5","Breads","Sourdough Slice",1.99,"Tangy artisanal bread","New",10,
      "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&h=300&fit=crop&auto=format"),
     ("br6","Breads","Ciabatta",3.49,"Italian white bread","",12,
-     "/static/images/ciabatta.jpg"),
+     "/static/images/Ciabatta.jpg"),
     ("br7","Breads","Focaccia",4.49,"Italian flatbread with herbs","New",12,
      "/static/images/focaccia.jpg"),
     ("br8","Breads","Dinner Roll",0.99,"Mumbai's special paav","",8,
-     "/static/images/dinner_roll.jpg"),
+     "/static/images/Dinner_roll.jpg"),
 
     # Main Course
     ("m1","Main Course","Margherita Pizza",12.99,"Classic cheese and tomato pizza","",25,
@@ -113,7 +113,7 @@ MENU_SEED = [
     ("d5","Desserts","Gulab Jamun",4.49,"Indian sweet syrup balls","",10,
      "/static/images/gulab_jamun.jpg"),
     ("d6","Desserts","Apple Pie",5.49,"Warm apple pie with cinnamon","New",12,
-     "/static/images/apple_pie.jpg"),
+     "/static/images/Apple_pie.jpg"),
     ("d7","Desserts","Chocolate Mousse",5.99,"Light and airy chocolate dessert","New",10,
      "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&h=300&fit=crop&auto=format"),
     ("d8","Desserts","Fruit Salad",4.99,"Mixed fresh seasonal fruits","",8,
@@ -121,7 +121,7 @@ MENU_SEED = [
     ("d9","Desserts","Panna Cotta",6.49,"Italian cream dessert","New",10,
      "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500&h=300&fit=crop&auto=format"),
     ("d10","Desserts","Rasmalai",5.49,"Cottage cheese discs in sweetened milk","New",10,
-     "/static/images/rasmalai.jpg"),
+     "/static/images/Rasmalai.jpg"),
     ("d11","Desserts","Gavla",22.99,"Bhiwandi's special sweet dish","Chef Special",30,
      "/static/images/gavla.jpg"),
 ]
