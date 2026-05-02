@@ -15,31 +15,23 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'menu.db')
 # ── Seed Data ──────────────────────────────────────────────────────────────
 MENU_SEED = [
     # Starters
-    ("s1","Starters","Spring Rolls",129,"Crispy vegetable spring rolls","",15,
- "/static/images/spring_roll.jpg"),
-
-    ("s2","Starters","Garlic Bread",119,"Toasted bread with garlic butter and herbs","Bestseller",12,
- "/static/images/garlic_bread.jpg"),
-
-    ("s3","Starters","French Fries",99,"Classic salted french fries","",10,
- "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&h=300&fit=crop&auto=format"),
-
-    ("s4","Starters","Onion Rings",109,"Golden fried onion rings","",12,
- "https://images.unsplash.com/photo-1639024471283-03518883512d?w=500&h=300&fit=crop&auto=format"),
-
-    ("s5","Starters","Mozzarella Sticks",169,"Cheese sticks with marinara sauce","New",15,
- "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=500&h=300&fit=crop&auto=format"),
-
-    ("s6","Starters","Bruschetta",149,"Grilled bread rubbed with garlic and topped with tomatoes","Chef Special",12,
- "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=500&h=300&fit=crop&auto=format"),
-
-    ("s7","Starters","chicken Burger",139,"Middle Eastern style burger","",12,
- "/static/images/chicken_burger.jpg"),
-
-    ("s8","Starters","Stuffed Mushrooms",179,"Mushrooms stuffed with cheese and herbs","Chef Special",15,
- "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&h=300&fit=crop&auto=format"),
-
-    ("s9","Starters","Nachos",159,"Tortilla chips with melted cheese and jalapenos","New",10,
+    ("s1","Starters","Spring Rolls",5.99,"Crispy vegetable spring rolls","",15,
+     "/static/images/spring_roll.jpg"),
+    ("s2","Starters","Garlic Bread",4.99,"Toasted bread with garlic butter and herbs","Bestseller",12,
+     "/static/images/garlic_bread.jpg"),
+    ("s3","Starters","French Fries",3.99,"Classic salted french fries","",10,
+     "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&h=300&fit=crop&auto=format"),
+    ("s4","Starters","Onion Rings",4.49,"Golden fried onion rings","",12,
+     "https://images.unsplash.com/photo-1639024471283-03518883512d?w=500&h=300&fit=crop&auto=format"),
+    ("s5","Starters","Mozzarella Sticks",6.99,"Cheese sticks with marinara sauce","New",15,
+     "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=500&h=300&fit=crop&auto=format"),
+    ("s6","Starters","Bruschetta",5.49,"Grilled bread rubbed with garlic and topped with tomatoes","Chef Special",12,
+     "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=500&h=300&fit=crop&auto=format"),
+    ("s7","Starters","chicken Burger",2.99,"Middle Eastern style burger","",12,
+     "/static/images/chicken_burger.jpg"),
+    ("s8","Starters","Stuffed Mushrooms",7.49,"Mushrooms stuffed with cheese and herbs","Chef Special",15,
+     "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&h=300&fit=crop&auto=format"),
+    ("s9","Starters","Nachos",6.49,"Tortilla chips with melted cheese and jalapenos","New",10,
      "/static/images/nachos.jpg"),
 
 
@@ -85,21 +77,18 @@ MENU_SEED = [
     
     ("br3","Breads","Butter Naan",2.29,"Naan brushed with butter","",10,
      "/static/images/butter_naan.jpg"),
-    
     ("br4","Breads","Tandoori Roti",1.49,"Whole wheat bread cooked in clay oven","Bestseller",10,
      "/static/images/tandoori_roti.jpg"),
-    
     ("br5","Breads","Sourdough Slice",1.99,"Tangy artisanal bread","New",10,
      "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&h=300&fit=crop&auto=format"),
     
     ("br6","Breads","Ciabatta",3.49,"Italian white bread","",12,
      "/static/images/ciabatta.jpg"),
-    
     ("br7","Breads","Focaccia",4.49,"Italian flatbread with herbs","New",12,
      "/static/images/focaccia.jpg"),
     
     ("br8","Breads","Dinner Roll",0.99,"Mumbai's special paav","",8,
-     "/static/images/dinner_roll.jpg"),
+     "/static/images/Dinner_roll.jpg"),
 
 
 
@@ -142,38 +131,28 @@ MENU_SEED = [
 
 
     # Desserts
-    ("d1","Desserts","Chocolate Brownie",149,"Warm brownie with fudge sauce","",12,
- "https://images.unsplash.com/photo-1564355808539-22fda35bed7e?w=500&h=300&fit=crop&auto=format"),
-
-    ("d2","Desserts","Vanilla Ice Cream",99,"Classic vanilla scoop","",8,
- "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500&h=300&fit=crop&auto=format"),
-
-    ("d3","Desserts","Cheesecake",179,"New York style cheesecake","Chef Special",10,
- "https://images.unsplash.com/photo-1578775887804-699de7086ff9?w=500&h=300&fit=crop&auto=format"),
-
-    ("d4","Desserts","Tiramisu",199,"Italian coffee-flavored dessert","Bestseller",10,
- "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&h=300&fit=crop&auto=format"),
-
-    ("d5","Desserts","Gulab Jamun",89,"Indian sweet syrup balls","",10,
- "/static/images/gulab_jamun.jpg"),
-
-    ("d6","Desserts","Apple Pie",139,"Warm apple pie with cinnamon","New",12,
- "/static/images/apple_pie.jpg"),
-
-    ("d7","Desserts","Chocolate Mousse",149,"Light and airy chocolate dessert","New",10,
- "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&h=300&fit=crop&auto=format"),
-
-    ("d8","Desserts","Fruit Salad",119,"Mixed fresh seasonal fruits","",8,
- "https://images.unsplash.com/photo-1568158879083-c42860933ed7?w=500&h=300&fit=crop&auto=format"),
-
-    ("d9","Desserts","Panna Cotta",179,"Italian cream dessert","New",10,
- "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500&h=300&fit=crop&auto=format"),
-
-    ("d10","Desserts","Rasmalai",129,"Cottage cheese discs in sweetened milk","New",10,
- "/static/images/rasmalai.jpg"),
-
-    ("d11","Desserts","Gavla",249,"Bhiwandi's special sweet dish","Chef Special",30,
- "/static/images/gavla.jpg"),
+    ("d1","Desserts","Chocolate Brownie",5.99,"Warm brownie with fudge sauce","",12,
+     "https://images.unsplash.com/photo-1564355808539-22fda35bed7e?w=500&h=300&fit=crop&auto=format"),
+    ("d2","Desserts","Vanilla Ice Cream",3.99,"Classic vanilla scoop","",8,
+     "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500&h=300&fit=crop&auto=format"),
+    ("d3","Desserts","Cheesecake",6.49,"New York style cheesecake","Chef Special",10,
+     "https://images.unsplash.com/photo-1578775887804-699de7086ff9?w=500&h=300&fit=crop&auto=format"),
+    ("d4","Desserts","Tiramisu",6.99,"Italian coffee-flavored dessert","Bestseller",10,
+     "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&h=300&fit=crop&auto=format"),
+    ("d5","Desserts","Gulab Jamun",4.49,"Indian sweet syrup balls","",10,
+     "/static/images/gulab_jamun.jpg"),
+    ("d6","Desserts","Apple Pie",5.49,"Warm apple pie with cinnamon","New",12,
+     "/static/images/apple_pie.jpg"),
+    ("d7","Desserts","Chocolate Mousse",5.99,"Light and airy chocolate dessert","New",10,
+     "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&h=300&fit=crop&auto=format"),
+    ("d8","Desserts","Fruit Salad",4.99,"Mixed fresh seasonal fruits","",8,
+     "https://images.unsplash.com/photo-1568158879083-c42860933ed7?w=500&h=300&fit=crop&auto=format"),
+    ("d9","Desserts","Panna Cotta",6.49,"Italian cream dessert","New",10,
+     "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500&h=300&fit=crop&auto=format"),
+    ("d10","Desserts","Rasmalai",5.49,"Cottage cheese discs in sweetened milk","New",10,
+     "/static/images/rasmalai.jpg"),
+    ("d11","Desserts","Gavla",22.99,"Bhiwandi's special sweet dish","Chef Special",30,
+     "/static/images/gavla.jpg"),
 ]
 
 CATEGORY_ORDER = ["Starters","Beverages","Breads","Main Course","Desserts"]
