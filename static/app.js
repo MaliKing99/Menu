@@ -77,14 +77,43 @@ function formatPrice(amount) {
             showLocationError("Location services are not supported by your browser. We need your location to deliver.");
             return;
         }
+        
+        // Show that we're checking location
+        startOrderingBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking location…';
+        
         navigator.geolocation.getCurrentPosition(
             (pos) => callDeliveryAPI(pos.coords.latitude, pos.coords.longitude),
             (err) => { 
-                console.warn('Geolocation:', err.message); 
-                showLocationError("Please enable location permissions and refresh. We need your location to verify delivery range."); 
+                console.warn('Geolocation Error:', err.code, err.message);
+                
+                // Provide helpful error messages based on error code
+                let errorMsg = "Please enable location permissions to verify delivery range.";
+                if (err.code === 1) {
+                    errorMsg = "Permission denied. Please enable location in browser settings and refresh.";
+                } else if (err.code === 2) {
+                    errorMsg = "Location unavailable. Ensure location is enabled on your device.";
+                } else if (err.code === 3) {
+                    errorMsg = "Location request timed out. Please try again or check your network.";
+                }
+                
+                showLocationErrorWithRetry(errorMsg);
             },
-            { timeout: 8000, maximumAge: 60000 }
+            { timeout: 15000, maximumAge: 0, enableHighAccuracy: false }
         );
+    }
+    
+    function showLocationErrorWithRetry(message) {
+        startOrderingBtn.disabled = false;
+        startOrderingBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Begin Ordering';
+        
+        customerNameInput.value = '';
+        customerNameInput.placeholder = message;
+        customerNameInput.style.borderColor = '#f59e0b';
+        
+        setTimeout(() => {
+            customerNameInput.style.borderColor = '';
+            customerNameInput.placeholder = 'Your Name';
+        }, 5000);
     }
 
     function callDeliveryAPI(lat, lng) {
@@ -106,9 +135,11 @@ function formatPrice(amount) {
                 showOutOfRange(data.message || "Out of delivery range. We're growing soon!");
             }
         })
-        .catch(() => {
-            // If the server check fails, we can't verify range.
-            showLocationError("Failed to connect to the server to verify your location. Please try again later.");
+        .catch((err) => {
+            console.error('Delivery API Error:', err);
+            startOrderingBtn.disabled = false;
+            startOrderingBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Begin Ordering';
+            showLocationError("Failed to verify location. Please check your connection and try again.");
         });
     }
 
