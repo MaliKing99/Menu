@@ -3,6 +3,7 @@ import sqlite3, os, math
 from config import (
     SERVER_LAT, SERVER_LNG,
     MAX_DELIVERY_KM,
+    BASE_DELIVERY_CHARGE, VARIABLE_CHARGE_THRESHOLD, VARIABLE_CHARGE_PER_KM,
     FIXED_PREP_TIME, TRAVEL_PER_KM, HANDOFF_BUFFER
 )
 
@@ -184,6 +185,18 @@ def haversine_km(lat1, lon1, lat2, lon2):
     a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
+def calculate_delivery_charge(distance_km):
+    """
+    Calculate delivery charge based on distance:
+    - Free up to VARIABLE_CHARGE_THRESHOLD km (15 km)
+    - ₹30 per km beyond threshold
+    """
+    if distance_km <= VARIABLE_CHARGE_THRESHOLD:
+        return BASE_DELIVERY_CHARGE
+    else:
+        extra_km = distance_km - VARIABLE_CHARGE_THRESHOLD
+        return BASE_DELIVERY_CHARGE + (extra_km * VARIABLE_CHARGE_PER_KM)
+
 def delivery_time_mins(distance_km, item_prep=0):
     """
     Total = max(item_prep, FIXED_PREP_TIME) + travel + handoff
@@ -257,6 +270,7 @@ def check_delivery():
     }
     if in_range:
         response["estimated_delivery_min"] = delivery_time_mins(dist)
+        response["delivery_charge"] = round(calculate_delivery_charge(dist), 2)
     else:
         response["message"] = "Out of delivery range. We're growing soon!"
 
@@ -337,22 +351,28 @@ def calculate_bill():
     if is_late and subtotal > 500:
         penalty = 100
 
-    total = subtotal + tax + penalty
+    delivery_charge = calculate_delivery_charge(distance_km)
+    total = subtotal + tax + penalty + delivery_charge
 
     return jsonify({
-        "items":         items,
-        "subtotal":      round(subtotal, 2),
-        "tax":           round(tax, 2),
-        "penalty":       round(penalty, 2),
-        "total":         round(total, 2),
-        "delivery_time": eta,
-        "distance_km":   round(distance_km, 2),
-        "avg_prep_min":  avg_prep,
+        "items":           items,
+        "subtotal":        round(subtotal, 2),
+        "tax":             round(tax, 2),
+        "delivery_charge": round(delivery_charge, 2),
+        "penalty":         round(penalty, 2),
+        "total":           round(total, 2),
+        "delivery_time":   eta,
+        "distance_km":     round(distance_km, 2),
+        "avg_prep_min":    avg_prep,
         # Server coords sent so frontend can render the Leaflet map
-        "server_lat":    SERVER_LAT,
-        "server_lng":    SERVER_LNG
+        "server_lat":      SERVER_LAT,
+        "server_lng":      SERVER_LNG
     })
 
 if __name__ == "__main__":
     init_db()
+    # Development mode - uses debug=True locally
     app.run(debug=True, port=5000)
+
+# Render will use Gunicorn, not the app.run() method
+init_db()

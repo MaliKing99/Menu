@@ -2,21 +2,31 @@
 #   DELIVERY CONFIGURATION  — Edit this file to change server location
 # ═══════════════════════════════════════════════════════════════════════════
 #
-#  HOW TO CHANGE LOCATION BEFORE YOUR COLLEGE DEMO:
-#  1. Open this file.
-#  2. Update SERVER_LAT and SERVER_LNG to your college's GPS coordinates.
-#     → Go to Google Maps → right-click your location → copy coordinates.
-#  3. Save the file and restart the Flask server.  That's it!
+#  📍 HOW TO CHANGE LOCATION (ALWAYS DO THIS):
+#  1. Open config.py
+#  2. Find the "Restaurant / Server Location" section below
+#  3. Go to Google Maps → right-click your shop location → copy the coordinates
+#  4. Update SERVER_LAT and SERVER_LNG with EXACTLY those numbers
+#  5. Update the "Current Location" comment to match
+#  6. Save the file
+#  7. Restart the Flask server (stop and run again)
+#
+#  ⚠️ IMPORTANT: Keep comments updated to avoid confusion!
 #
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── Restaurant / Server Location ──────────────────────────────────────────
-# Current: Bhaskar Mali Chawk, Bhiwandi, Maharashtra, India
-SERVER_LAT = 19.081370206748694   # ← change to college latitude  e.g. 19.0760
-SERVER_LNG = 72.88860538053606   # ← change to college longitude e.g. 72.8777
+# Current: 7-Eleven, Thane West, Maharashtra, India
+SERVER_LAT = 19.2183   # ← ALWAYS update this with your shop's latitude
+SERVER_LNG = 72.9781   # ← ALWAYS update this with your shop's longitude
 
 # ── Delivery Limits ───────────────────────────────────────────────────────
-MAX_DELIVERY_KM = 100        # Orders beyond this distance are rejected
+MAX_DELIVERY_KM = 40         # Orders beyond 40 km are rejected
+
+# ── Delivery Charges (in ₹) ───────────────────────────────────────────────
+BASE_DELIVERY_CHARGE    = 0  # Free delivery up to VARIABLE_CHARGE_THRESHOLD
+VARIABLE_CHARGE_THRESHOLD = 15  # Apply variable charges after 15 km
+VARIABLE_CHARGE_PER_KM  = 30    # ₹30 per km beyond VARIABLE_CHARGE_THRESHOLD
 
 # ── Time Components (minutes) ─────────────────────────────────────────────
 FIXED_PREP_TIME  = 20       # Kitchen preparation time

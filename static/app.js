@@ -442,6 +442,7 @@ function setCategory(cat) {
             <div class="receipt-divider"></div>
             <div class="receipt-item"><span>Subtotal</span><span>${formatPrice(data.subtotal)}</span></div>
             <div class="receipt-item"><span>Tax (8%)</span><span>${formatPrice(data.tax)}</span></div>
+            <div class="receipt-item"><span>Delivery Charge</span><span>${formatPrice(data.delivery_charge)}</span></div>
             ${data.penalty > 0 ? `
                 <div class="receipt-item" style="color:#ef4444;">
                     <span>Late Pickup Fine</span>
