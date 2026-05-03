@@ -1,49 +1,49 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ── Elements ──────────────────────────────────────────────────────────
-    const menuGrid = document.getElementById('menuGrid');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const cartBtn = document.getElementById('openCartBtn');
-    const closeCartBtn = document.getElementById('closeCartBtn');
-    const cartSidebar = document.getElementById('cartSidebar');
-    const cartOverlay = document.getElementById('cartOverlay');
-    const cartItemsEl = document.getElementById('cartItems');
-    const subtotalAmount = document.getElementById('subtotalAmount');
-    const cartCount = document.getElementById('cartCount');
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    const billModal = document.getElementById('billModal');
-    const closeBillBtn = document.getElementById('closeBillBtn');
-    const billBody = document.getElementById('billBody');
-    const welcomeOverlay = document.getElementById('welcomeOverlay');
+    const menuGrid          = document.getElementById('menuGrid');
+    const categoryFilter    = document.getElementById('categoryFilter');
+    const cartBtn           = document.getElementById('openCartBtn');
+    const closeCartBtn      = document.getElementById('closeCartBtn');
+    const cartSidebar       = document.getElementById('cartSidebar');
+    const cartOverlay       = document.getElementById('cartOverlay');
+    const cartItemsEl       = document.getElementById('cartItems');
+    const subtotalAmount    = document.getElementById('subtotalAmount');
+    const cartCount         = document.getElementById('cartCount');
+    const checkoutBtn       = document.getElementById('checkoutBtn');
+    const billModal         = document.getElementById('billModal');
+    const closeBillBtn      = document.getElementById('closeBillBtn');
+    const billBody          = document.getElementById('billBody');
+    const welcomeOverlay    = document.getElementById('welcomeOverlay');
     const customerNameInput = document.getElementById('customerName');
-    const startOrderingBtn = document.getElementById('startOrderingBtn');
-    const confirmModal = document.getElementById('confirmModal');
-    const confirmOrderBtn = document.getElementById('confirmOrderBtn');
-    const cancelOrderBtn = document.getElementById('cancelOrderBtn');
-    const searchInput = document.getElementById('searchInput');
-    const searchNotice = document.getElementById('searchNotice');
-    const contactModal = document.getElementById('contactModal');
-    const closeContactBtn = document.getElementById('closeContactBtn');
-    const contactNavBtn = document.getElementById('contactNavBtn');
-    const contactFooterBtn = document.getElementById('contactFooterBtn');
+    const startOrderingBtn  = document.getElementById('startOrderingBtn');
+    const confirmModal      = document.getElementById('confirmModal');
+    const confirmOrderBtn   = document.getElementById('confirmOrderBtn');
+    const cancelOrderBtn    = document.getElementById('cancelOrderBtn');
+    const searchInput       = document.getElementById('searchInput');
+    const searchNotice      = document.getElementById('searchNotice');
+    const contactModal      = document.getElementById('contactModal');
+    const closeContactBtn   = document.getElementById('closeContactBtn');
+    const contactNavBtn     = document.getElementById('contactNavBtn');
+    const contactFooterBtn  = document.getElementById('contactFooterBtn');
     const outOfRangeOverlay = document.getElementById('outOfRangeOverlay');
-    const oorMessage = document.getElementById('oorMessage');
+    const oorMessage        = document.getElementById('oorMessage');
 
     // ── State ─────────────────────────────────────────────────────────────
-    let userName = '';
-    let menuData = {};
-    let cart = [];
+    let userName       = '';
+    let menuData       = {};
+    let cart           = [];
     let activeCategory = 'All';
-    let searchQuery = '';
-    let userLat = null;   // stored after geolocation
-    let userLng = null;
+    let searchQuery    = '';
+    let userLat        = null;   // stored after geolocation
+    let userLng        = null;
     let userDistanceKm = 0;
     let deliveryMapInstance = null;  // Leaflet map — reused across receipts
 
 
     // ✅ GLOBAL CURRENCY FORMAT FUNCTION
-    function formatPrice(amount) {
-        return '₹' + amount.toLocaleString('en-IN');
-    }
+function formatPrice(amount) {
+    return '₹' + amount.toLocaleString('en-IN');
+}
 
 
     // ── Welcome ───────────────────────────────────────────────────────────
@@ -77,39 +77,70 @@ document.addEventListener('DOMContentLoaded', () => {
             showLocationError("Location services are not supported by your browser. We need your location to deliver.");
             return;
         }
+        
+        // Show that we're checking location
+        startOrderingBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking location…';
+        
         navigator.geolocation.getCurrentPosition(
             (pos) => callDeliveryAPI(pos.coords.latitude, pos.coords.longitude),
-            (err) => {
-                console.warn('Geolocation:', err.message);
-                showLocationError("Please enable location permissions and refresh. We need your location to verify delivery range.");
+            (err) => { 
+                console.warn('Geolocation Error:', err.code, err.message);
+                
+                // Provide helpful error messages based on error code
+                let errorMsg = "Please enable location permissions to verify delivery range.";
+                if (err.code === 1) {
+                    errorMsg = "Permission denied. Please enable location in browser settings and refresh.";
+                } else if (err.code === 2) {
+                    errorMsg = "Location unavailable. Ensure location is enabled on your device.";
+                } else if (err.code === 3) {
+                    errorMsg = "Location request timed out. Please try again or check your network.";
+                }
+                
+                showLocationErrorWithRetry(errorMsg);
             },
-            { timeout: 8000, maximumAge: 60000 }
+            { timeout: 15000, maximumAge: 0, enableHighAccuracy: false }
         );
+    }
+    
+    function showLocationErrorWithRetry(message) {
+        startOrderingBtn.disabled = false;
+        startOrderingBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Begin Ordering';
+        
+        customerNameInput.value = '';
+        customerNameInput.placeholder = message;
+        customerNameInput.style.borderColor = '#f59e0b';
+        
+        setTimeout(() => {
+            customerNameInput.style.borderColor = '';
+            customerNameInput.placeholder = 'Your Name';
+        }, 5000);
     }
 
     function callDeliveryAPI(lat, lng) {
         fetch('/api/check_delivery', {
-            method: 'POST',
+            method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lat, lng })
+            body:    JSON.stringify({ lat, lng })
         })
-            .then(r => r.json())
-            .then(data => {
-                if (data.in_range) {
-                    // Store coords for the Leaflet map shown AFTER order is placed
-                    userLat = lat;
-                    userLng = lng;
-                    userDistanceKm = data.distance_km || 0;
-                    proceedToMenu(userDistanceKm);
-                    // ✅ No ETA shown here — user hasn't ordered yet
-                } else {
-                    showOutOfRange(data.message || "Out of delivery range. We're growing soon!");
-                }
-            })
-            .catch(() => {
-                // If the server check fails, we can't verify range.
-                showLocationError("Failed to connect to the server to verify your location. Please try again later.");
-            });
+        .then(r => r.json())
+        .then(data => {
+            if (data.in_range) {
+                // Store coords for the Leaflet map shown AFTER order is placed
+                userLat = lat;
+                userLng = lng;
+                userDistanceKm = data.distance_km || 0;
+                proceedToMenu(userDistanceKm);
+                // ✅ No ETA shown here — user hasn't ordered yet
+            } else {
+                showOutOfRange(data.message || "Out of delivery range. We're growing soon!");
+            }
+        })
+        .catch((err) => {
+            console.error('Delivery API Error:', err);
+            startOrderingBtn.disabled = false;
+            startOrderingBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Begin Ordering';
+            showLocationError("Failed to verify location. Please check your connection and try again.");
+        });
     }
 
     function proceedToMenu(distKm) {
@@ -129,11 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { welcomeOverlay.style.display = 'none'; }, 850);
         document.body.style.overflow = '';
         if (oorMessage) oorMessage.textContent = msg;
-
+        
         // Reset title to out of range just in case
         const title = outOfRangeOverlay.querySelector('h2');
         if (title) title.textContent = "Out of Delivery Range";
-
+        
         outOfRangeOverlay.style.display = 'flex';
     }
 
@@ -142,13 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { welcomeOverlay.style.display = 'none'; }, 850);
         document.body.style.overflow = '';
         if (oorMessage) oorMessage.textContent = msg;
-
+        
         // Change title to Location Required
         const title = outOfRangeOverlay.querySelector('h2');
         if (title) title.textContent = "Location Required";
-
+        
         outOfRangeOverlay.style.display = 'flex';
-
+        
         // Re-enable button in case they go back
         startOrderingBtn.disabled = false;
         startOrderingBtn.innerHTML = 'Begin Ordering &nbsp;<i class="fa-solid fa-arrow-right"></i>';
@@ -170,56 +201,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Categories (FIXED - NO DUPLICATION) ───────────────────────────────────
-    function renderCategories() {
+function renderCategories() {
 
-        function setCategory(cat) {
-            activeCategory = cat;
+function setCategory(cat) {
+    activeCategory = cat;
 
-            // Reset search when category is clicked
-            searchInput.value = '';
-            searchQuery = '';
-            searchNotice.style.display = 'none';
+    // Reset search when category is clicked
+    searchInput.value = '';
+    searchQuery = '';
+    searchNotice.style.display = 'none';
 
-            renderMenu();
-        }
+    renderMenu();
+}
 
-        // ✅ Remove all buttons except "All"
-        const allBtn = categoryFilter.querySelector('[data-category="All"]');
-        categoryFilter.innerHTML = '';
-        categoryFilter.appendChild(allBtn);
+    // ✅ Remove all buttons except "All"
+    const allBtn = categoryFilter.querySelector('[data-category="All"]');
+    categoryFilter.innerHTML = '';
+    categoryFilter.appendChild(allBtn);
 
-        const cats = Object.keys(menuData);
+    const cats = Object.keys(menuData);
 
-        cats.forEach(cat => {
-            if (!menuData[cat]) return;
+    cats.forEach(cat => {
+        if (!menuData[cat]) return;
 
-            const btn = document.createElement('button');
-            btn.className = 'cat-btn';
-            btn.dataset.category = cat;
-            btn.textContent = cat;
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn';
+        btn.dataset.category = cat;
+        btn.textContent = cat;
 
-            btn.addEventListener('click', () => {
-                setCategory(cat);
-
-                categoryFilter.querySelectorAll('.cat-btn')
-                    .forEach(b => b.classList.remove('active'));
-
-                btn.classList.add('active');
-            });
-
-            categoryFilter.appendChild(btn);
-        });
-
-        // ✅ Ensure "All" button works properly
-        allBtn.addEventListener('click', (e) => {
-            setCategory('All');
+        btn.addEventListener('click', () => {
+            setCategory(cat);
 
             categoryFilter.querySelectorAll('.cat-btn')
                 .forEach(b => b.classList.remove('active'));
 
-            e.target.classList.add('active');
+            btn.classList.add('active');
         });
-    }
+
+        categoryFilter.appendChild(btn);
+    });
+
+    // ✅ Ensure "All" button works properly
+    allBtn.addEventListener('click', (e) => {
+        setCategory('All');
+
+        categoryFilter.querySelectorAll('.cat-btn')
+            .forEach(b => b.classList.remove('active'));
+
+        e.target.classList.add('active');
+    });
+}
     // ── Search ────────────────────────────────────────────────────────────
     searchInput.addEventListener('input', () => {
         searchQuery = searchInput.value.trim().toLowerCase();
@@ -261,13 +292,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         items.forEach(item => {
             const tagClass = item.tag === 'Bestseller' ? 'bestseller'
-                : item.tag === 'Chef Special' ? 'chef-special'
-                    : item.tag === 'New' ? 'new' : '';
-            const tagIcon = item.tag === 'Bestseller' ? '🥇'
-                : item.tag === 'Chef Special' ? '👨‍🍳'
-                    : item.tag === 'New' ? '✨' : '';
-            const tagHtml = item.tag ? `<span class="item-tag ${tagClass}">${tagIcon} ${item.tag}</span>` : '';
-            const imgUrl = item.image_url || 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&h=300&fit=crop&auto=format';
+                           : item.tag === 'Chef Special' ? 'chef-special'
+                           : item.tag === 'New' ? 'new' : '';
+            const tagIcon  = item.tag === 'Bestseller' ? '🥇'
+                           : item.tag === 'Chef Special' ? '👨‍🍳'
+                           : item.tag === 'New' ? '✨' : '';
+            const tagHtml  = item.tag ? `<span class="item-tag ${tagClass}">${tagIcon} ${item.tag}</span>` : '';
+            const imgUrl   = item.image_url || 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&h=300&fit=crop&auto=format';
 
             const el = document.createElement('div');
             el.className = 'menu-item';
@@ -286,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="item-delivery"><i class="fa-solid fa-clock"></i> ~${item.delivery_time} mins prep</span>
                     </div>
                     <p class="item-desc">${item.description}</p>
-                    <button class="add-to-cart-btn" onclick="addToCart('${item.id}','${item.name.replace(/'/g, "\\'")}',${item.price})">
+                    <button class="add-to-cart-btn" onclick="addToCart('${item.id}','${item.name.replace(/'/g,"\\'")}',${item.price})">
                         <i class="fa-solid fa-plus"></i> Add to Cart
                     </button>
                 </div>
@@ -329,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
             checkoutBtn.disabled = false;
             cart.forEach(item => {
                 subtotal += item.price * item.quantity;
-                count += item.quantity;
+                count    += item.quantity;
                 const el = document.createElement('div');
                 el.className = 'cart-item';
                 el.innerHTML = `
@@ -376,42 +407,42 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmOrderBtn.textContent = 'Placing Order…';
         confirmOrderBtn.disabled = true;
 
-        // 🕒 Check if user is late BEFORE sending request
-        const pickupTime = localStorage.getItem("pickupTime");
-        const now = Date.now();
+    // 🕒 Check if user is late BEFORE sending request
+    const pickupTime = localStorage.getItem("pickupTime");
+    const now = Date.now();
 
-        let isUserLate = false;
-        if (pickupTime && now > pickupTime) {
-            isUserLate = true;
-        }
+    let isUserLate = false;
+    if (pickupTime && now > pickupTime) {
+        isUserLate = true;
+    }
 
-        fetch('/api/bill', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                cart: cart,
-                distance_km: userDistanceKm,
-                is_late: isUserLate   // 👈 HERE
-            })
+    fetch('/api/bill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cart: cart,
+            distance_km: userDistanceKm,
+            is_late: isUserLate   // 👈 HERE
         })
-            .then(r => r.json())
-            .then(data => {
-                // 🕒 Store pickup time using ETA
-                const eta = data.delivery_time;  // already coming from backend
-                const pickupTime = Date.now() + (eta * 60 * 1000);
-                localStorage.setItem("pickupTime", pickupTime);
-                showBill(data);
-                cart = [];
-                updateCartUI();
-                confirmOrderBtn.textContent = 'Yes, Place Order';
-                confirmOrderBtn.disabled = false;
-            })
-            .catch(() => {
-                alert('Error generating bill.');
-                confirmOrderBtn.textContent = 'Yes, Place Order';
-                confirmOrderBtn.disabled = false;
-                billBody.innerHTML = `...`;
-            });
+    })
+    .then(r => r.json())
+    .then(data => {
+        // 🕒 Store pickup time using ETA
+        const eta = data.delivery_time;  // already coming from backend
+        const pickupTime = Date.now() + (eta * 60 * 1000);
+        localStorage.setItem("pickupTime", pickupTime);
+        showBill(data);
+        cart = [];
+        updateCartUI();
+        confirmOrderBtn.textContent = 'Yes, Place Order';
+        confirmOrderBtn.disabled = false;
+        })
+    .catch(() => {
+            alert('Error generating bill.');
+            confirmOrderBtn.textContent = 'Yes, Place Order';
+            confirmOrderBtn.disabled = false;
+            billBody.innerHTML = `...`;
+        });
     });
 
     // ── Bill / Receipt with Leaflet Map ───────────────────────────────────
@@ -425,12 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
-        const eta = data.delivery_time || 20;   // FIX 1: was data.pickup_time (undefined) — backend key is delivery_time
-        const dist = data.distance_km || 0;
-        const avgPrep = data.avg_prep_min || 15;
+        const eta      = data.delivery_time || 20;   // FIX 1: was data.pickup_time (undefined) — backend key is delivery_time
+        const dist     = data.distance_km   || 0;
+        const avgPrep  = data.avg_prep_min  || 15;
         const distLabel = dist > 0 ? ` &nbsp;·&nbsp; ${dist.toFixed(1)} km` : '';
         const mapsLink = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${data.server_lat},${data.server_lng}&travelmode=driving`;
-
+        
         billBody.innerHTML = `
             <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
             <h3 style="text-align:center;margin-bottom:6px;color:var(--text-main);

@@ -371,4 +371,8 @@ def calculate_bill():
 
 if __name__ == "__main__":
     init_db()
+    # Development mode - uses debug=True locally
     app.run(debug=True, port=5000)
+
+# Render will use Gunicorn, not the app.run() method
+init_db()
