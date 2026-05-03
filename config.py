@@ -14,6 +14,7 @@
 #  ⚠️ IMPORTANT: Keep comments updated to avoid confusion!
 #
 # ═══════════════════════════════════════════════════════════════════════════
+import os
 
 # ── Restaurant / Server Location ──────────────────────────────────────────
 # Current: 7-Eleven, Thane West, Maharashtra, India
@@ -32,3 +33,11 @@ VARIABLE_CHARGE_PER_KM  = 30    # ₹30 per km beyond VARIABLE_CHARGE_THRESHOLD
 FIXED_PREP_TIME  = 20       # Kitchen preparation time
 TRAVEL_PER_KM    = 3        # 3 min/km  →  ~20 km/h average city speed
 HANDOFF_BUFFER   = 5        # Driver finding house / parking
+
+# ── Database Configuration ────────────────────────────────────────────────
+# For local development, uses SQLite
+# For production (Render), uses PostgreSQL via DATABASE_URL environment variable
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///menu.db')
+# Handle Render's postgres:// → postgresql:// scheme change
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)

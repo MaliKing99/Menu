@@ -1,17 +1,21 @@
 from flask import Flask, render_template, jsonify, request
-import sqlite3, os, math
+from flask_sqlalchemy import SQLAlchemy
+import os, math
 from config import (
     SERVER_LAT, SERVER_LNG,
     MAX_DELIVERY_KM,
     BASE_DELIVERY_CHARGE, VARIABLE_CHARGE_THRESHOLD, VARIABLE_CHARGE_PER_KM,
-    FIXED_PREP_TIME, TRAVEL_PER_KM, HANDOFF_BUFFER
+    FIXED_PREP_TIME, TRAVEL_PER_KM, HANDOFF_BUFFER,
+    DATABASE_URL
 )
 
 app = Flask(__name__)
 app.json.sort_keys = False
 app.config['JSON_SORT_KEYS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'menu.db')
+db = SQLAlchemy(app)
 
 # ── Seed Data ──────────────────────────────────────────────────────────────
 MENU_SEED = [
@@ -175,6 +179,30 @@ MENU_SEED = [
 
 CATEGORY_ORDER = ["Starters","Beverages","Breads","Main Course","Desserts"]
 
+# ── Database Model ────────────────────────────────────────────────────────
+class MenuItem(db.Model):
+    __tablename__ = 'menu_items'
+    
+    id = db.Column(db.String(10), primary_key=True)
+    category = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String(500), default='')
+    tag = db.Column(db.String(50), default='')
+    delivery_time = db.Column(db.Integer, default=15)
+    image_url = db.Column(db.String(500), default='')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'price': self.price,
+            'description': self.description,
+            'tag': self.tag,
+            'delivery_time': self.delivery_time,
+            'image_url': self.image_url
+        }
+
 # ── Haversine distance helper ───────────────────────────────────────────────
 def haversine_km(lat1, lon1, lat2, lon2):
     """Return distance in km between two GPS coordinates."""
@@ -206,40 +234,34 @@ def delivery_time_mins(distance_km, item_prep=0):
     return int(prep + travel + HANDOFF_BUFFER)
 
 # ── DB helpers ─────────────────────────────────────────────────────────────
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
 def init_db():
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS menu_items (
-            id TEXT PRIMARY KEY,
-            category TEXT NOT NULL,
-            name TEXT NOT NULL,
-            price REAL NOT NULL,
-            description TEXT DEFAULT '',
-            tag TEXT DEFAULT '',
-            delivery_time INTEGER DEFAULT 15,
-            image_url TEXT DEFAULT ''
-        )
-    """)
-    c.executemany("""
-        INSERT INTO menu_items (id, category, name, price, description, tag, delivery_time, image_url)
-        VALUES (?,?,?,?,?,?,?,?)
-        ON CONFLICT(id) DO UPDATE SET
-            category=excluded.category,
-            name=excluded.name,
-            price=excluded.price,
-            description=excluded.description,
-            tag=excluded.tag,
-            delivery_time=excluded.delivery_time,
-            image_url=excluded.image_url
-    """, MENU_SEED)
-    conn.commit()
-    conn.close()
+    with app.app_context():
+        db.create_all()
+        # Seed data
+        for seed_item in MENU_SEED:
+            item = MenuItem.query.filter_by(id=seed_item[0]).first()
+            if not item:
+                item = MenuItem(
+                    id=seed_item[0],
+                    category=seed_item[1],
+                    name=seed_item[2],
+                    price=seed_item[3],
+                    description=seed_item[4],
+                    tag=seed_item[5],
+                    delivery_time=seed_item[6],
+                    image_url=seed_item[7]
+                )
+                db.session.add(item)
+            else:
+                # Update existing
+                item.category = seed_item[1]
+                item.name = seed_item[2]
+                item.price = seed_item[3]
+                item.description = seed_item[4]
+                item.tag = seed_item[5]
+                item.delivery_time = seed_item[6]
+                item.image_url = seed_item[7]
+        db.session.commit()
 
 # ── Routes ─────────────────────────────────────────────────────────────────
 @app.route("/")
@@ -279,25 +301,13 @@ def check_delivery():
 # ── Menu ───────────────────────────────────────────────────────────────────
 @app.route("/api/menu")
 def get_menu():
-    conn = get_db()
-    rows = conn.execute(
-        "SELECT * FROM menu_items ORDER BY category"
-    ).fetchall()
-    conn.close()
-
+    items = MenuItem.query.order_by(MenuItem.category).all()
+    
     grouped = {cat: [] for cat in CATEGORY_ORDER}
-    for r in rows:
-        cat = r["category"]
+    for item in items:
+        cat = item.category
         if cat in grouped:
-            grouped[cat].append({
-                "id":            r["id"],
-                "name":          r["name"],
-                "price":         r["price"],
-                "description":   r["description"],
-                "tag":           r["tag"],
-                "delivery_time": r["delivery_time"],
-                "image_url":     r["image_url"]
-            })
+            grouped[cat].append(item.to_dict())
     return jsonify(grouped)
 
 # ── Bill ───────────────────────────────────────────────────────────────────
@@ -317,24 +327,20 @@ def calculate_bill():
     items      = []
     prep_times = []   # avg kitchen time across all ordered item types
 
-    conn = get_db()
     for cart_item in cart:
         item_id  = cart_item.get("id")
         quantity = cart_item.get("quantity", 1)
-        row = conn.execute(
-            "SELECT * FROM menu_items WHERE id=?", (item_id,)
-        ).fetchone()
-        if row:
-            item_total = row["price"] * quantity
+        menu_item = MenuItem.query.filter_by(id=item_id).first()
+        if menu_item:
+            item_total = menu_item.price * quantity
             subtotal  += item_total
-            prep_times.append(row["delivery_time"])
+            prep_times.append(menu_item.delivery_time)
             items.append({
-                "name":     row["name"],
-                "price":    row["price"],
+                "name":     menu_item.name,
+                "price":    menu_item.price,
                 "quantity": quantity,
                 "total":    round(item_total, 2)
             })
-    conn.close()
 
     # Average prep time of ordered items (not max, not fixed) + 10 mins buffer
     avg_prep = (int(sum(prep_times) / len(prep_times)) if prep_times else FIXED_PREP_TIME) + 10
@@ -373,6 +379,6 @@ if __name__ == "__main__":
     init_db()
     # Development mode - uses debug=True locally
     app.run(debug=True, port=5000)
-
-# Render will use Gunicorn, not the app.run() method
-init_db()
+else:
+    # Render/Production will use this
+    init_db()
