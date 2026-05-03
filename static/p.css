@@ -16,8 +16,8 @@
     --tag-chef: #5c3d1e;
     --tag-new: #1a3a1a;
 }
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Outfit',sans-serif;}
-body{background:var(--bg-dark);color:var(--text-main);min-height:100vh;overflow-x:hidden;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Outfit',sans-serif;background:var(--bg-dark);color:var(--text-main);min-height:100vh;overflow-x:hidden;}
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:var(--bg-dark);}
 ::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);border-radius:4px;}

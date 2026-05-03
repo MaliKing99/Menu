@@ -217,16 +217,6 @@
             // Ctrl+S (save page)
             if(e.ctrlKey && e.keyCode === 83){ e.preventDefault(); return false; }
         });
-
-        // 3. Detect DevTools via window-size heuristic
-        var _threshold = 160;
-        setInterval(function(){
-            var widthDiff  = window.outerWidth  - window.innerWidth;
-            var heightDiff = window.outerHeight - window.innerHeight;
-            if(widthDiff > _threshold || heightDiff > _threshold){
-                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0804;color:#c9a84c;font-family:serif;font-size:1.6rem;">&#128274; Access Restricted</div>';
-            }
-        }, 1000);
     })();
     </script>
 </body>
